@@ -45,4 +45,36 @@ class WatchService {
   }
 }
 
+Future<Map<String, dynamic>?> addWatch(Map<String, dynamic> watchData) async {
+    try {
+      final response = await _supabaseClient.from('watches').insert(watchData).select().single();
+      return response;
+    } catch (e) {
+      print("Error adding watch: $e");
+      return null;
+    }
+  }
+
+  // Update a watch
+  Future<bool> updateWatch(int id, Map<String, dynamic> updatedData) async {
+    try {
+      await _supabaseClient.from('watches').update(updatedData).match({'id': id});
+      return true;
+    } catch (e) {
+      print("Error updating watch: $e");
+      return false;
+    }
+  }
+
+  // Delete a watch
+  Future<bool> deleteWatch(int id) async {
+    try {
+      await _supabaseClient.from('watches').delete().match({'id': id});
+      return true;
+    } catch (e) {
+      print("Error deleting watch: $e");
+      return false;
+    }
+  }
+
 }

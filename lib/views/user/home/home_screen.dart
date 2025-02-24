@@ -1,5 +1,3 @@
-import 'package:ecommerce_app/providers/action_provider.dart';
-import 'package:ecommerce_app/views/admin/add_watch.dart';
 import 'package:ecommerce_app/views/auth/login/login_screen.dart';
 import 'package:ecommerce_app/views/user/actions/cart_screen.dart';
 import 'package:ecommerce_app/views/user/actions/orders_screen.dart';

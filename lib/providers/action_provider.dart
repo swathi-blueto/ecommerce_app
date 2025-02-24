@@ -7,6 +7,7 @@ class ActionProvider extends ChangeNotifier {
   void addToWishlist(Map<String, dynamic> watch) {
     if (!_wishlist.any((item) => item['id'] == watch['id'])) {
       _wishlist.add(watch);
+      print(_wishlist);
       notifyListeners();
     }
   }

@@ -16,7 +16,7 @@ class OrderService {
   final totalAmount = quantity * price;
 
   try {
-    // Insert order without checking for `error`
+    
     await supabase.from('orders').insert({
       'user_id': userId,
       'product_id': productId,
@@ -42,14 +42,14 @@ class OrderService {
   // Fetch Orders for a User
  Future<List<Map<String, dynamic>>> getOrders(String userId) async {
   try {
-    // Query the orders directly
+    
     final List<dynamic> response = await supabase
         .from('orders')
         .select()
         .eq('user_id', userId)
         .order('created_at', ascending: false);
 
-    // Convert the response to a list of maps
+   
     return List<Map<String, dynamic>>.from(response);
   } catch (e) {
     print('Error fetching Orders: $e');

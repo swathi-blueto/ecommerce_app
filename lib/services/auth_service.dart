@@ -138,11 +138,11 @@ class AuthService {
       final filePath = "profile_images/${user.id}.jpg";
 
       await _supabase.storage
-          .from("profile_pictures")
+          .from("profile-pictures")
           .upload(filePath, imageFile, fileOptions: FileOptions(upsert: true));
 
       final imageUrl =
-          _supabase.storage.from("profile_pictures").getPublicUrl(filePath);
+          _supabase.storage.from("profile-pictures").getPublicUrl(filePath);
 
       return imageUrl;
     } catch (e) {

@@ -3,9 +3,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart'; 
+import 'package:flutter/foundation.dart';
 
 class AddWatchPage extends StatefulWidget {
+  final Map<String, dynamic>? watch;
+
+  AddWatchPage({this.watch});
+
   @override
   _AddWatchPageState createState() => _AddWatchPageState();
 }
@@ -27,13 +31,36 @@ class _AddWatchPageState extends State<AddWatchPage> {
   final _discountController = TextEditingController();
   final _warrantyPeriodController = TextEditingController();
   final _releaseDateController = TextEditingController();
-  bool _isActive = true; 
+  bool _isActive = true;
   XFile? _image;
   final _picker = ImagePicker();
   bool isUploading = false;
   Uint8List? _imageBytes;
 
-  
+  @override
+  void initState() {
+    super.initState();
+    if (widget.watch != null) {
+      _nameController.text = widget.watch!['name'];
+      _categoryController.text = widget.watch!['category'];
+      _descriptionController.text = widget.watch!['description'];
+      _priceController.text = widget.watch!['price'].toString();
+      _stockController.text = widget.watch!['stock'].toString();
+      _brandController.text = widget.watch!['brand'];
+      _ratingController.text = widget.watch!['rating'].toString();
+      _materialController.text = widget.watch!['material'];
+      _movementTypeController.text = widget.watch!['movement_type'];
+      _waterResistanceController.text = widget.watch!['water_resistance'];
+      _dialSizeController.text = widget.watch!['dial_size'].toString();
+      _strapSizeController.text = widget.watch!['strap_size'];
+      _discountController.text = widget.watch!['discount'].toString();
+      _warrantyPeriodController.text =
+          widget.watch!['warranty_period'].toString();
+      _releaseDateController.text = widget.watch!['release_date'];
+      _isActive = widget.watch!['is_active'];
+    }
+  }
+
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     setState(() {
@@ -41,52 +68,67 @@ class _AddWatchPageState extends State<AddWatchPage> {
       if (pickedFile != null) {
         pickedFile.readAsBytes().then((bytes) {
           setState(() {
-            _imageBytes = bytes; 
+            _imageBytes = bytes;
           });
         });
       }
     });
   }
-  Future<String> _uploadImage() async {
-    if (_image == null || _imageBytes == null) return '';
 
-    final fileName = _image!.name;
-    final filePath = 'watches/$fileName';
-
-    final storage = Supabase.instance.client.storage;
-
-    try {
-      if (kIsWeb) {
-        
-        await storage.from('watch-images').uploadBinary(
-              filePath,
-              _imageBytes!,
-            );
-        print("Image uploaded successfully for web.");
-      } else {
-        
-        final file = File(_image!.path);
-        await storage.from('watch-images').upload(filePath, file);
-        print("Image uploaded successfully for mobile.");
-      }
+ Future<String> _uploadImage(String? existingImageUrl) async {
+  if (_image == null || _imageBytes == null) return existingImageUrl ?? '';
 
   
-      final publicUrl = storage.from('watch-images').getPublicUrl(filePath);
-      print("Public URL: $publicUrl");
-      return publicUrl;
-    } catch (e) {
-      print('Error uploading image: $e');
-      return '';
-    }
+  final String uniqueFileName = '${DateTime.now().millisecondsSinceEpoch}_${_image!.name}';
+  final String filePath = 'watches/$uniqueFileName';
+
+  final storage = Supabase.instance.client.storage;
+
+  
+  if (await _imageExists(filePath)) {
+    print("Image already exists: $filePath");
+    return existingImageUrl ?? ''; 
   }
 
-  
-  Future<void> _addWatch() async {
+  try {
+    if (kIsWeb) {
+      await storage.from('watch-images').uploadBinary(
+            filePath,
+            _imageBytes!,
+          );
+    } else {
+      final file = File(_image!.path);
+      await storage.from('watch-images').upload(filePath, file);
+    }
+
+    final publicUrl = storage.from('watch-images').getPublicUrl(filePath);
+    return publicUrl;
+  } catch (e) {
+    print('Error uploading image: $e');
+    return '';
+  }
+}
+
+Future<bool> _imageExists(String filePath) async {
+  final storage = Supabase.instance.client.storage;
+  try {
+    final response = await storage.from('watch-images').list();
+    return response.any((file) => file.name == filePath.split('/').last);
+  } catch (e) {
+    print('Error checking image existence: $e');
+    return false;
+  }
+}
+
+
+
+  Future<void> _addOrUpdateWatch() async {
     final user = Supabase.instance.client.auth.currentUser;
 
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You need to be logged in to add a watch')),
+        SnackBar(
+            content: Text('You need to be logged in to add or update a watch')),
       );
       return;
     }
@@ -98,39 +140,69 @@ class _AddWatchPageState extends State<AddWatchPage> {
     });
 
     try {
-      final imageUrl = await _uploadImage();
+      String imageUrl;
 
       
-      final response = await Supabase.instance.client
-          .from('watches')
-          .insert({
-            'name': _nameController.text,
-            'category': _categoryController.text,
-            'description': _descriptionController.text,
-            'price': double.tryParse(_priceController.text) ?? 0.0,
-            'stock': int.tryParse(_stockController.text) ?? 0,
-            'brand': _brandController.text,
-            'rating': double.tryParse(_ratingController.text) ?? 0.0,
-            'image_url': imageUrl,
-            'material': _materialController.text,
-            'movement_type': _movementTypeController.text,
-            'water_resistance': _waterResistanceController.text,
-            'dial_size': int.tryParse(_dialSizeController.text) ?? 0,
-            'strap_size': _strapSizeController.text,
-            'discount': double.tryParse(_discountController.text) ?? 0.0,
-            'warranty_period': int.tryParse(_warrantyPeriodController.text) ?? 0,
-            'release_date': _releaseDateController.text,
-            'is_active': _isActive,
-            'created_at': DateTime.now().toIso8601String(),
-            
-          })
-          .select()
-          .single();
+      if (_image != null) {
+        imageUrl = await _uploadImage(
+            widget.watch != null ? widget.watch!['image_url'] : null);
+      } else {
+       
+        imageUrl = widget.watch != null ? widget.watch!['image_url'] : '';
+      }
 
-      print(response);
+      final watchData = {
+        'name': _nameController.text,
+        'category': _categoryController.text,
+        'description': _descriptionController.text,
+        'price': double.tryParse(_priceController.text) ?? 0.0,
+        'stock': int.tryParse(_stockController.text) ?? 0,
+        'brand': _brandController.text,
+        'rating': double.tryParse(_ratingController.text) ?? 0.0,
+        'image_url': imageUrl, 
+        'material': _materialController.text,
+        'movement_type': _movementTypeController.text,
+        'water_resistance': _waterResistanceController.text,
+        'dial_size': int.tryParse(_dialSizeController.text) ?? 0,
+        'strap_size': _strapSizeController.text,
+        'discount': double.tryParse(_discountController.text) ?? 0.0,
+        'warranty_period': int.tryParse(_warrantyPeriodController.text) ?? 0,
+        'release_date': _releaseDateController.text,
+        'is_active': _isActive,
+        'created_at': DateTime.now().toIso8601String(),
+      };
 
-      if (response == null) {
-        throw Exception('Failed to add watch');
+      if (widget.watch == null) {
+        // Insert new watch
+        final response = await Supabase.instance.client
+            .from('watches')
+            .insert(watchData)
+            .select()
+            .single();
+
+        if (response == null) {
+          throw Exception('Failed to add watch');
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Watch added successfully!')),
+        );
+      } else {
+        
+        final response = await Supabase.instance.client
+            .from('watches')
+            .update(watchData)
+            .eq('id', widget.watch!['id'])
+            .select()
+            .maybeSingle();
+
+        if (response == null) {
+          throw Exception('Failed to update watch: No rows returned');
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Watch updated successfully!')),
+        );
       }
 
       
@@ -153,14 +225,11 @@ class _AddWatchPageState extends State<AddWatchPage> {
         _image = null;
         _imageBytes = null;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Watch added successfully!')),
-      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add watch: $e')),
+        SnackBar(content: Text('Failed to add or update watch: $e')),
       );
+      print("Failed to update: $e");
     } finally {
       setState(() {
         isUploading = false;
@@ -168,10 +237,25 @@ class _AddWatchPageState extends State<AddWatchPage> {
     }
   }
 
+  Future<void> _deleteImage(String imageUrl) async {
+    if (imageUrl.isEmpty) return;
+
+    final storage = Supabase.instance.client.storage;
+    final filePath = imageUrl.split('/').last;
+
+    try {
+      await storage.from('watch-images').remove([filePath]);
+      print("Image deleted successfully.");
+    } catch (e) {
+      print('Error deleting image: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add Watch')),
+      appBar: AppBar(
+          title: Text(widget.watch == null ? 'Add Watch' : 'Edit Watch')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -256,7 +340,8 @@ class _AddWatchPageState extends State<AddWatchPage> {
                 ),
                 TextFormField(
                   controller: _warrantyPeriodController,
-                  decoration: InputDecoration(labelText: 'Warranty Period (years)'),
+                  decoration:
+                      InputDecoration(labelText: 'Warranty Period (years)'),
                   keyboardType: TextInputType.number,
                 ),
                 TextFormField(
@@ -293,8 +378,10 @@ class _AddWatchPageState extends State<AddWatchPage> {
                 isUploading
                     ? CircularProgressIndicator()
                     : ElevatedButton(
-                        onPressed: _addWatch,
-                        child: Text('Add Watch'),
+                        onPressed: _addOrUpdateWatch,
+                        child: Text(widget.watch == null
+                            ? 'Add Watch'
+                            : 'Update Watch'),
                       ),
               ],
             ),

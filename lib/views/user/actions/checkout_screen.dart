@@ -161,7 +161,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Checkout", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text("Checkout", style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.blue,
       ),
@@ -194,7 +194,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "🛍 Product: ${widget.watch['name']}",
+                      "🛍 Watch: ${widget.watch['name']}",
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),

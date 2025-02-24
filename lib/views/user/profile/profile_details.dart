@@ -9,16 +9,16 @@ class ProfileDetailsScreen extends StatelessWidget {
 
     // Fetch user profile details if not already loaded
     if (authProvider.userDetails == null && authProvider.user?.id != null) {
-      authProvider.fetchUserProfile(authProvider.user!.id); // Use user!.id
+      authProvider.fetchUserProfile(authProvider.user!.id);
     }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           "Profile Details",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
         ),
-        backgroundColor: Colors.blue[700], // Subtle blue color for AppBar
+        backgroundColor: Colors.blue[500],
         elevation: 4,
         centerTitle: true,
       ),
@@ -27,19 +27,19 @@ class ProfileDetailsScreen extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Profile Image Section with Shadow and Border
+            
               Center(
                 child: CircleAvatar(
                   radius: 60,
-                  backgroundColor: Colors.blue[100], // Light blue background for the profile picture
+                  backgroundColor: Colors.blue[100],
                   backgroundImage: authProvider.userProfileImage != null
                       ? NetworkImage(authProvider.userProfileImage!)
-                      : AssetImage("assets/imauser-logo.png") as ImageProvider,
+                      : AssetImage("assets/images/user-logo.png") as ImageProvider,
                 ),
               ),
               SizedBox(height: 30),
 
-              // Profile Information Card
+             
               Card(
                 elevation: 5,
                 shadowColor: Colors.blue.withOpacity(0.3),
@@ -51,19 +51,14 @@ class ProfileDetailsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Full Name Field
                       _buildProfileField("Full Name", authProvider.userDetails?['full_name']),
                       Divider(),
-                      // Phone Number Field
                       _buildProfileField("Phone Number", authProvider.userDetails?['phone_number']),
                       Divider(),
-                      // Gender Field
                       _buildProfileField("Gender", authProvider.userDetails?['gender']),
                       Divider(),
-                      // State Field
                       _buildProfileField("State", authProvider.userDetails?['state']),
                       Divider(),
-                      // City Field
                       _buildProfileField("City", authProvider.userDetails?['city']),
                     ],
                   ),
@@ -87,7 +82,7 @@ class ProfileDetailsScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.blue[800], // Dark blue text for titles
+              color: Colors.blue[800],
             ),
           ),
           SizedBox(height: 5),
@@ -95,7 +90,7 @@ class ProfileDetailsScreen extends StatelessWidget {
             value ?? 'Not Available',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.black87, // Black text for the values
+              color: Colors.black87,
             ),
           ),
         ],

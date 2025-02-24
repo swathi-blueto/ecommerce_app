@@ -1,10 +1,8 @@
-import 'dart:io';
-import 'package:ecommerce_app/views/user/profile/profile_details.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ecommerce_app/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-
+import 'package:ecommerce_app/views/user/profile/profile_details.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -17,7 +15,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _selectedGender;
   String? _selectedState;
   String? _selectedCity;
-  File? _profileImage;
+  XFile? _profileImage;
 
   final List<String> _genders = ["Male", "Female", "Other"];
   final List<String> _states = ["Tamil Nadu", "Karnataka", "Kerala"];
@@ -29,12 +27,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   final ImagePicker _picker = ImagePicker();
 
-  // Pick image from gallery or camera
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
       setState(() {
-        _profileImage = File(pickedFile.path);
+        _profileImage = pickedFile; 
       });
     }
   }
@@ -58,8 +55,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     String? imageUrl;
     if (_profileImage != null) {
-      imageUrl = await authProvider.uploadProfileImage(_profileImage!);
+      imageUrl = await authProvider.uploadProfileImage(_profileImage!); // Pass XFile directly
     }
+
+    print("imageurl in updateprofile $imageUrl");
 
     await authProvider.updateProfile(
       fullName: fullName,
@@ -88,13 +87,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: EdgeInsets.all(20),
         child: Column(
           children: [
-            // Profile Image Upload
+          
             GestureDetector(
               onTap: () => _pickImage(ImageSource.gallery),
               child: CircleAvatar(
                 radius: 50,
                 backgroundImage: _profileImage != null
-                    ? FileImage(_profileImage!)
+                    ? NetworkImage(_profileImage!.path) // Use NetworkImage for XFile
                     : AssetImage("assets/profile_placeholder.png")
                         as ImageProvider,
                 child: _profileImage == null
@@ -104,14 +103,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 20),
 
-            // Full Name
+           
             TextField(
               controller: _fullNameController,
               decoration: InputDecoration(labelText: "Full Name"),
             ),
             SizedBox(height: 10),
 
-            // Phone Number
+           
             TextField(
               controller: _phoneNumberController,
               keyboardType: TextInputType.phone,
@@ -119,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 10),
 
-            // Gender Dropdown
+            
             DropdownButtonFormField<String>(
               value: _selectedGender,
               onChanged: (value) {
@@ -135,13 +134,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 10),
 
-            // State Dropdown
+           
             DropdownButtonFormField<String>(
               value: _selectedState,
               onChanged: (value) {
                 setState(() {
                   _selectedState = value;
-                  _selectedCity = null; // Reset city selection
+                  _selectedCity = null; 
                 });
               },
               items: _states
@@ -152,7 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 10),
 
-            // City Dropdown (Changes based on selected State)
+            
             DropdownButtonFormField<String>(
               value: _selectedCity,
               onChanged: (value) {
@@ -172,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             SizedBox(height: 20),
 
-            // Update Button
+           
             ElevatedButton(
               onPressed: _updateProfile,
               child: Text("Update Profile"),

@@ -26,7 +26,7 @@ void _login() async {
 
   if (error == null) {
     if (authProvider.isAuthenticated()) {
-      // Redirect based on role
+      
       String? role = authProvider.role;
       if (role == "admin") {
         Navigator.pushReplacement(
